@@ -1,0 +1,62 @@
+---
+
+- include_vars: vars/main.yml
+
+- name: Update existing repo
+  yum:
+    name: '*'
+    state: latest
+
+- name: Add PostgreSQL Yum Repository
+  yum_repository:
+    name: PostgreSQL
+    description: PostgreSQL Yum Repository
+    baseurl: https://download.postgresql.org/pub/repos/yum/15/redhat/rhel-7-x86_64
+    gpgkey: https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-15
+    gpgcheck: yes
+
+- name: Install psycopg2
+  yum:
+    name: python-psycopg2
+    state: present
+
+- name: Install PostgreSQL 15
+  yum:
+    name:
+      - postgresql15-server
+      - postgresql15-contrib
+    state: present
+
+- name: Create user for DB
+  user:
+    name: "{{ db_user }}"
+    shell: /bin/bash
+    createhome: yes
+    state: present
+
+- name: Create a .ssh directory
+  file:
+    path: "/home/{{ db_user }}/.ssh"
+    state: directory
+    owner: "{{ db_user }}"
+    mode: "0700"
+
+- name: Generate SSH key for user
+  openssh_keypair:
+    path: "/home/{{ db_user }}/.ssh/id_rsa"
+    owner: "{{ db_user }}"
+    mode: "0600"
+  register: ssh_keypair_output
+
+- name: Add SSH key to authorized_keys
+  authorized_key:
+    user: "{{ db_user }}"
+    key: "{{ ssh_keypair_output.public_key }}"
+    state: present
+
+- name: Grant full permissions to group on PostgreSQL data directory
+  file:
+    path: "/var/lib/pgsql/{{ db_version }}/data"
+    owner: "{{ db_user }}"
+    mode: '0770'
+    recurse: yes

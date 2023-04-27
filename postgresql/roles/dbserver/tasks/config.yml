@@ -1,0 +1,31 @@
+---
+
+- include_vars: vars/main.yml
+
+- name: Stop PostgreSQL service
+  systemd:
+    name: "{{ postgre_service }}"
+    state: stopped
+
+- name: Create postgresql.conf file
+  copy:
+    src: templates/postgresql.conf.j2
+    dest: "{{ pg_data_dir }}/postgresql.conf"
+    mode: "0600"
+    backup: "yes"
+    owner: "postgres"
+    group: "postgres"
+
+- name: Create pg_hba.conf file
+  copy:
+    src: templates/pg_hba.conf.j2
+    dest: "{{ pg_data_dir }}/pg_hba.conf"
+    owner: postgres
+    group: "postgres"
+    backup: "yes"
+    mode: '0600'
+
+- name: Start PostgreSQL service
+  systemd:
+    name: "{{ postgre_service }}"
+    state: started

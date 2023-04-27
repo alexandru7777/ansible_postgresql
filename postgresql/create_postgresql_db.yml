@@ -1,0 +1,7 @@
+---
+
+- name: Start DB Process Installation
+  become: true
+  hosts: dbserver
+  roles:
+    - dbserver

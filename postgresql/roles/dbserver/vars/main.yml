@@ -1,0 +1,7 @@
+---
+db_user: "postgres_user"
+db_version: "15"
+postgre_service: "postgresql-15.service"
+pg_data_dir: "/var/lib/pgsql/15/data"
+username: "admin_db"
+db_name: "accounts"

@@ -1,0 +1,5 @@
+# Add group and host of the group
+# This is just an example
+
+[dbserver]
+app01 ansible_host=192.168.0.119 ansible_user=root

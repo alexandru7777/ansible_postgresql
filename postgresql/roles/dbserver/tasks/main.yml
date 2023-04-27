@@ -1,0 +1,55 @@
+---
+
+- include_tasks: setup_centos7.yml
+
+- include_tasks: init.yml
+
+- include_tasks: config.yml
+
+- include_vars: vars/main.yml
+
+# Creata a database - a user - change configuration - restart the service
+
+- name: Create database
+  postgresql_db:
+    name: "{{ db_name }}"
+    encoding: UTF8
+    lc_collate: en_US.UTF-8
+    lc_ctype: en_US.UTF-8
+    state: present
+  become_user: "{{ db_user }}"
+  become_method: su
+
+- name: Create user with password
+  postgresql_user:
+    db: "{{ db_name }}"
+    name: "{{ username }}"
+    password: "{{ lookup('file', 'vars/db_password.yml.vault') | ansible_vault }}"
+    priv: ALL
+    state: present
+  become_user: "{{ db_user }}"
+  become_method: su
+
+- name: Set permissions for database
+  postgresql_privs:
+    db: "{{ db_name }}"
+    priv: ALL
+    type: database
+    role: "{{ username }}"
+  become_user: "{{ db_user }}"
+  become_method: su
+
+- name: Set permissions for schema
+  postgresql_privs:
+    db: "{{ db_name }}"
+    priv: ALL
+    type: schema
+    objs: public
+    role: "{{ username }}"
+  become_user: "{{ db_user }}"
+  become_method: su
+
+- name: Restart PostgreSQL
+  systemd:
+    name: "{{ postgre_service }}"
+    state: restarted
